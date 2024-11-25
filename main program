@@ -1,0 +1,188 @@
+#include <iostream>
+#include <string>
+#include <ctime>
+
+using namespace std;
+
+// =====================
+// Person Class
+// =====================
+class Person {
+public:
+    // Konstruktor
+    Person(string username, string password);
+
+    // Fungsi Register dan Login
+    bool login(string username, string password);
+    void registerAccount(string username, string password);
+
+    // Fungsi Wallet
+    void topUpWallet(double amount);
+    bool payRide(double amount);
+
+    // Fungsi Utility
+    double getWalletBalance() const;
+
+private:
+    string username;
+    string password;
+    double walletBalance;
+};
+
+// Implementasi Person Class
+Person::Person(string username, string password) 
+    : username(username), password(password), walletBalance(0.0) {}
+
+bool Person::login(string inputUsername, string inputPassword) {
+    if (inputUsername == username && inputPassword == password) {
+        cout << "Login berhasil!" << endl;
+        return true;
+    } else {
+        cout << "Login gagal. Username atau password salah." << endl;
+        return false;
+    }
+}
+
+void Person::registerAccount(string newUsername, string newPassword) {
+    username = newUsername;
+    password = newPassword;
+    cout << "Akun berhasil didaftarkan." << endl;
+}
+
+void Person::topUpWallet(double amount) {
+    if (amount > 0) {
+        walletBalance += amount;
+        cout << "Saldo berhasil ditambahkan: " << amount << " IDR." << endl;
+    } else {
+        cout << "Nominal top-up tidak valid." << endl;
+    }
+}
+
+bool Person::payRide(double amount) {
+    if (walletBalance >= amount) {
+        walletBalance -= amount;
+        cout << "Pembayaran berhasil. Saldo tersisa: " << walletBalance << " IDR." << endl;
+        return true;
+    } else {
+        cout << "Saldo tidak mencukupi untuk melakukan pembayaran." << endl;
+        return false;
+    }
+}
+
+double Person::getWalletBalance() const {
+    return walletBalance;
+}
+
+// =====================
+// Trip Class
+// =====================
+class Trip {
+public:
+    Trip(double costPerMinute);
+
+    void startRide();
+    void endRide();
+    double calculateCost() const;
+
+private:
+    time_t startTime;
+    time_t endTime;
+    double costPerMinute;
+};
+
+// Implementasi Trip Class
+Trip::Trip(double costPerMinute) : costPerMinute(costPerMinute) {}
+
+void Trip::startRide() {
+    time(&startTime);
+    cout << "Perjalanan dimulai." << endl;
+}
+
+void Trip::endRide() {
+    time(&endTime);
+    cout << "Perjalanan selesai." << endl;
+}
+
+double Trip::calculateCost() const {
+    double duration = difftime(endTime, startTime) / 60; // Hitung durasi dalam menit
+    return duration * costPerMinute;
+}
+
+// =====================
+// Main Program
+// =====================
+int main() {
+    // Inisialisasi Akun
+    Person user("user123", "password");
+    string username, password;
+    bool loggedIn = false;
+
+    while (!loggedIn) {
+        cout << "Masukkan username: ";
+        cin >> username;
+        cout << "Masukkan password: ";
+        cin >> password;
+
+        loggedIn = user.login(username, password);
+        if (!loggedIn) {
+            cout << "Coba lagi." << endl;
+        }
+    }
+
+    // Menu interaktif
+    int choice;
+    Trip trip(500); // Biaya 500 IDR per menit
+    bool rideActive = false;
+
+    do {
+        cout << "\n==========================\n";
+        cout << "   Sistem Rental Scooter\n";
+        cout << "==========================\n";
+        cout << "1. Top-Up Wallet\n";
+        cout << "2. Mulai Perjalanan (Start Ride)\n";
+        cout << "3. Akhiri Perjalanan (End Ride)\n";
+        cout << "4. Cek Saldo Wallet\n";
+        cout << "0. Keluar\n";
+        cout << "Pilih menu: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1: {
+            double amount;
+            cout << "Masukkan jumlah saldo yang ingin ditambahkan: ";
+            cin >> amount;
+            user.topUpWallet(amount);
+            break;
+        }
+        case 2:
+            if (!rideActive) {
+                trip.startRide();
+                rideActive = true;
+            } else {
+                cout << "Perjalanan sudah dimulai. Akhiri perjalanan sebelum memulai yang baru." << endl;
+            }
+            break;
+        case 3:
+            if (rideActive) {
+                trip.endRide();
+                double cost = trip.calculateCost();
+                cout << "Biaya perjalanan: " << cost << " IDR." << endl;
+                user.payRide(cost);
+                rideActive = false;
+            } else {
+                cout << "Tidak ada perjalanan aktif untuk diakhiri." << endl;
+            }
+            break;
+        case 4:
+            cout << "Saldo wallet Anda: " << user.getWalletBalance() << " IDR." << endl;
+            break;
+        case 0:
+            cout << "Terima kasih telah menggunakan sistem rental scooter!" << endl;
+            break;
+        default:
+            cout << "Pilihan tidak valid. Coba lagi." << endl;
+        }
+    } while (choice != 0);
+
+    return 0;
+}
